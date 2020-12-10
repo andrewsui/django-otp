@@ -16,8 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# 3rd party
+from django_otp.admin import OTPAdminSite
+
 # Imports from local apps
 import esignature
+
+admin.site.__class__ = OTPAdminSite
 
 # Start of Urls
 urlpatterns = [
