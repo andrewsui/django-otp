@@ -5,11 +5,11 @@ from django import forms
 from django.core.files.base import ContentFile
 from django.utils.timezone import now
 
-from .models import Signature
+from .models import SignatureImageUrl, SignatureString
 
-class SignatureForm(forms.ModelForm):
+class SignatureImageUrlForm(forms.ModelForm):
     class Meta:
-        model = Signature
+        model = SignatureImageUrl
         exclude = ['signature']
         signature = forms.CharField()
     
@@ -49,3 +49,32 @@ class SignatureForm(forms.ModelForm):
                 )
             )
         return cleaned_data
+
+class SignatureStringForm(forms.ModelForm):
+    class Meta:
+        model = SignatureString
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        base64_sig = cleaned_data.get('signature')
+        if base64_sig==None:
+            error_msg = "There was an issue uploading your signature. \
+                Please try again."
+            self.add_error('signature', error_msg)
+        elif not base64_sig.startswith("data:image/png;base64,"):
+            error_msg = "There was an issue uploading your signature. \
+                Please try again."
+            self.add_error('signature', error_msg)
+        elif base64_sig == 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASw\
+            AAACWCAYAAABkW7XSAAAAxUlEQVR4nO3BMQEAAADCoPVPbQhfoAAAAAAAAAAAAAAA\
+                AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+                    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+                        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+                            AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOA1\
+                                v9QAATX68/0AAAAASUVORK5CYII=':
+            error_msg = "Signature cannot be blank."
+            self.add_error('signature', error_msg)
+        else:
+            return cleaned_data
+

@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Signature
+from .models import SignatureImageUrl, SignatureString
 
 # Register your models here.
-admin.site.register(Signature)
+admin.site.register(SignatureImageUrl)
+admin.site.register(SignatureString)

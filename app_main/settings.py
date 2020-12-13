@@ -133,4 +133,4 @@ STATICFILES_DIRS=[
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-OTP_TOTP_ISSUER = 'django-otp-test'
+OTP_TOTP_ISSUER = 'django-otp-virtualbox'

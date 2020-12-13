@@ -8,8 +8,9 @@ import esignature
 from . import views
 
 urlpatterns = [
-    path('sign/', views.SignatureCreateView.as_view(), name='signature_create_route'),
     path('media/signatures/<path>/', serve, {
         'document_root': settings.MEDIA_ROOT + '/signatures/'
     }),
+    path('sign2image/', views.SignatureImageUrlCreateView.as_view(), name='signature_image_create_route'),
+    path('sign2string/', views.SignatureStringCreateView.as_view(), name='signature_string_create_route'),
 ]
