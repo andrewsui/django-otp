@@ -1,5 +1,6 @@
 # Django
 from django.urls import reverse_lazy
+from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 # Own apps
@@ -19,3 +20,6 @@ class SignatureStringCreateView(CreateView):
     form_class = SignatureStringForm
     template_name = 'esignature/signature_form.html'
     success_url = reverse_lazy('signature_string_create_route')
+
+class SignatureStringDetailView(DetailView):
+    model = SignatureString
