@@ -26,7 +26,8 @@ class SignatureStringCreateView(CreateView):
 class SignatureStringDetailView(DetailView):
     model = SignatureString
 
-# PDF
+
+# PDF - WeasyPrint
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML, CSS
@@ -51,5 +52,85 @@ class PdfWeasyPrintMixin:
 
 class PdfWeasyPrintDetailView(PdfWeasyPrintMixin, DetailView):
     model = SignatureString
-    template_name = 'esignature/pdf_detail.html'
-    content_disposition = 'inline; filename="custom-filename.pdf"'
+    template_name = 'esignature/pdf_weasyprint_detail.html'
+    # content_disposition = 'inline; filename="custom-filename.pdf"'
+
+
+# PDF - xhtml2pdf
+from django.conf import settings
+from django.http import HttpResponse
+from django.template.loader import get_template
+from django.contrib.staticfiles import finders
+from xhtml2pdf import pisa
+
+class PdfXhtml2pdfMixin:
+    '''
+    To allow URL references to be resolved using Django’s STATIC_URL and
+    MEDIA_URL settings, xhtml2pdf allows users to specify a link_callback
+    parameter to point to a function that converts relative URLs to absolute
+    system paths.
+    '''
+    def link_callback(self, uri, rel):
+        """
+        Convert HTML URIs to absolute system paths so xhtml2pdf can access
+        those resources.
+        """
+        result = finders.find(uri)
+        if result:
+            if not isinstance(result, (list, tuple)):
+                result = [result]
+            result = list(os.path.realpath(path) for path in result)
+            path = result[0]
+        else:
+            sUrl = settings.STATIC_URL      # e.g. /static/
+            sRoot = settings.STATIC_ROOT    # e.g. /home/user/project_static/
+            mUrl = settings.MEDIA_URL       # e.g. /media/
+            mRoot = settings.MEDIA_ROOT     # e.g. /home/user/project_static/media/
+
+            if uri.startswith(mUrl):
+                path = os.path.join(mRoot, uri.replace(mUrl, ""))
+            elif uri.startswith(sUrl):
+                path = os.path.join(sRoot, uri.replace(sUrl, ""))
+            else:
+                return uri
+
+        # Make sure that file exists
+        if not os.path.isfile(path):
+            raise Exception('media URI must start with %s or %s' % (sUrl, mUrl))
+        return path
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        DEFAULT_FILENAME = "document.pdf"
+
+        # Create a Django response object, and specify content_type as PDF
+        response = HttpResponse(content_type='application/pdf')
+        if hasattr(self, 'content_disposition'):
+            response['Content-Disposition'] = self.content_disposition
+        else:
+            response['Content-Disposition'] = (
+                'inline; filename=' + DEFAULT_FILENAME
+            )
+
+        # Find the template and render it
+        template = get_template(self.template_name)
+        html = template.render(context)
+
+        # Create a PDF
+        pisa_status = pisa.CreatePDF(
+            html,
+            dest=response,
+            link_callback=self.link_callback,
+        )
+
+        # If error then return error response
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        else:
+            return response
+
+class PdfXhtml2pdfDetailView(PdfXhtml2pdfMixin, DetailView):
+    model = SignatureString
+    template_name = 'esignature/pdf_xhtml2pdf_detail.html'
+    # content_disposition = 'inline; filename="custom-filename.pdf"'
