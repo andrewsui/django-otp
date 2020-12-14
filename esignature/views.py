@@ -1,12 +1,9 @@
 # Django
-from django.http import HttpResponse
 from django.urls import reverse_lazy
-from django.template.loader import render_to_string
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 # 3rd party
-from weasyprint import HTML, CSS
 
 # Own apps
 from .models import SignatureImageUrl, SignatureString
@@ -29,10 +26,16 @@ class SignatureStringCreateView(CreateView):
 class SignatureStringDetailView(DetailView):
     model = SignatureString
 
-class PdfMixin:
+# PDF
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML, CSS
+
+class PdfWeasyPrintMixin:
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
+        DEFAULT_FILENAME = "document.pdf"
 
         # Render PDF
         html_template = render_to_string(self.template_name, context)
@@ -41,10 +44,12 @@ class PdfMixin:
         if hasattr(self, 'content_disposition'):
             response['Content-Disposition'] = self.content_disposition
         else:
-            response['Content-Disposition'] = 'inline; filename="report.pdf"'
+            response['Content-Disposition'] = (
+                'inline; filename=' + DEFAULT_FILENAME
+            )
         return response
 
-class PdfStringDetailView(PdfMixin, DetailView):
+class PdfWeasyPrintDetailView(PdfWeasyPrintMixin, DetailView):
     model = SignatureString
-    template_name = 'esignature/pdfstring_detail.html'
+    template_name = 'esignature/pdf_detail.html'
     content_disposition = 'inline; filename="custom-filename.pdf"'
