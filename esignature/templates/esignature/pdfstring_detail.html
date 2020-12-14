@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block css %}
+    {% load i18n %}
+    <style>
+        @page {
+            size: "A4";
+            margin: 2.5cm 1.5cm 3.5cm 1.5cm;
+            @top-center {
+                content: "Document Title";
+            }
+            @bottom-center {
+                content: "{% trans 'CSS loaded custom footer' %}";
+                background-size: auto 1.5cm;
+                padding-top: 1.5cm;
+                text-align: center;
+                vertical-align: top;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages); 
+            }
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <img src="{{ object.signature }}" alt="base64-png">
+{% endblock %}
