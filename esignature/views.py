@@ -28,6 +28,7 @@ class SignatureStringDetailView(DetailView):
 
 
 # PDF - WeasyPrint
+from django.conf import settings
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML, CSS
@@ -40,7 +41,10 @@ class PdfWeasyPrintMixin:
 
         # Render PDF
         html_template = render_to_string(self.template_name, context)
-        pdf_file = HTML(string=html_template).write_pdf()
+        pdf_file = HTML(string=html_template).write_pdf(
+            # Load separate CSS stylesheet from static folder
+            stylesheets=[CSS(settings.STATIC_ROOT + 'css/styles.css')]
+        )
         response = HttpResponse(pdf_file, content_type='application/pdf')
         if hasattr(self, 'content_disposition'):
             response['Content-Disposition'] = self.content_disposition
